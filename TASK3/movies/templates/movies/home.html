@@ -31,7 +31,7 @@
     {% endfor %}
   </main>
 
- {% if request.resolver_match.url_name != 'profile' %}
+  {% if request.resolver_match.url_name != 'profile' %}
   <footer class="pagination-footer">
     <div class="pagination-controls">
       
@@ -48,12 +48,62 @@
         <a href="?page={{ movies.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="load-more-btn">Next</a>
         <a href="?page={{ movies.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="load-more-btn">Last &raquo;</a>
       {% else %}
-    
-        <a href="{% url 'database' %}" class="load-more-btn database-load-more">Load Movies...</a>
+        <button id="load-movies-btn" type="button" onclick="loadMoviesFromFrontend()" class="load-more-btn database-load-more">
+          Load Movies...
+        </button>
       {% endif %}
       
     </div>
   </footer>
-{% endif %}
+
+  <script>
+  async function loadMoviesFromFrontend() {
+    const btn = document.getElementById('load-movies-btn');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Loading...';
+
+    const nextPage = {{ next_api_page|default:1 }};
+    const apiUrl = "{{ api_base_url|default:'https://jsonfakery.com/movies/paginated?page=' }}" + nextPage;
+
+    try {
+      // 1. Fetch movies directly from the user's browser
+      const apiResponse = await fetch(apiUrl, {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Movie API returned HTTP ${apiResponse.status}`);
+      }
+
+      const jsonData = await apiResponse.json();
+
+      // 2. Send fetched movies to Django backend to save in database
+      const saveResponse = await fetch("{% url 'database' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+          page: nextPage,
+          data: jsonData.data || []
+        })
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save movies to the database.");
+      }
+
+      // 3. Refresh page to show the newly added movies
+      window.location.reload();
+    } catch (err) {
+      alert("Error loading movies: " + err.message);
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  }
+  </script>
+  {% endif %}
 
 {% endblock %}
