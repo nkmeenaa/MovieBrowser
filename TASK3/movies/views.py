@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".ENV")
 load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 API_BASE_URL = os.getenv("API_URL")
 
 def dataBase(request):
@@ -106,7 +107,7 @@ def dataBase(request):
       
 def home(request):
     
-    movies = Movie.objects.prefetch_related('casts').all()
+    movies = Movie.objects.prefetch_related('casts').order_by('id')
     search = request.GET.get('q')
     if search:
       movies = movies.filter(original_title__icontains=search)
