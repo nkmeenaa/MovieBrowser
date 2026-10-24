@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.paginator import Paginator
 
@@ -87,6 +88,7 @@ def dataBase(request):
     return redirect('home')
 
 
+@ensure_csrf_cookie
 def home(request):
     movies = Movie.objects.prefetch_related('casts').order_by('id')
     search = request.GET.get('q')

@@ -65,8 +65,16 @@
 
     const nextPage = {{ next_api_page|default:1 }};
     const apiUrl = "{{ api_base_url|default:'https://jsonfakery.com/movies/paginated?page=' }}" + nextPage;
+    const csrfCookie = document.cookie
+      .split('; ')
+      .find(cookie => cookie.startsWith('csrftoken='));
+    const csrfToken = csrfCookie ? decodeURIComponent(csrfCookie.split('=').slice(1).join('=')) : '';
 
     try {
+      if (!csrfToken) {
+        throw new Error('Could not find the security token. Refresh the page and try again.');
+      }
+
       // 1. Fetch movies directly from the user's browser
       const apiResponse = await fetch(apiUrl, {
         headers: { 'Accept': 'application/json' }
@@ -81,9 +89,10 @@
       // 2. Send fetched movies to Django backend to save in database
       const saveResponse = await fetch("{% url 'database' %}", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": "{{ csrf_token }}"
+          "X-CSRFToken": csrfToken
         },
         body: JSON.stringify({
           page: nextPage,

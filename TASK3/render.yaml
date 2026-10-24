@@ -9,3 +9,5 @@ services:
         generateValue: true
       - key: DEBUG
         value: False
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://moviebrowser-aksn.onrender.com
