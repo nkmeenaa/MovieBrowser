@@ -51,7 +51,7 @@ This project uses Django's native authentication framework rather than a third-p
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Nitin5117/MovieBrowser/
+   git clone https://github.com/nkmeenaa/MovieBrowser/
    cd MovieBrowser/TASK3
    ```
 
